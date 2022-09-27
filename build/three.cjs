@@ -7,7 +7,7 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-const REVISION = '145dev';
+const REVISION = '144';
 const MOUSE = {
 	LEFT: 0,
 	MIDDLE: 1,
@@ -9802,7 +9802,7 @@ var morphtarget_pars_vertex = "#ifdef USE_MORPHTARGETS\n\tuniform float morphTar
 
 var morphtarget_vertex = "#ifdef USE_MORPHTARGETS\n\ttransformed *= morphTargetBaseInfluence;\n\t#ifdef MORPHTARGETS_TEXTURE\n\t\tfor ( int i = 0; i < MORPHTARGETS_COUNT; i ++ ) {\n\t\t\tif ( morphTargetInfluences[ i ] != 0.0 ) transformed += getMorph( gl_VertexID, i, 0 ).xyz * morphTargetInfluences[ i ];\n\t\t}\n\t#else\n\t\ttransformed += morphTarget0 * morphTargetInfluences[ 0 ];\n\t\ttransformed += morphTarget1 * morphTargetInfluences[ 1 ];\n\t\ttransformed += morphTarget2 * morphTargetInfluences[ 2 ];\n\t\ttransformed += morphTarget3 * morphTargetInfluences[ 3 ];\n\t\t#ifndef USE_MORPHNORMALS\n\t\t\ttransformed += morphTarget4 * morphTargetInfluences[ 4 ];\n\t\t\ttransformed += morphTarget5 * morphTargetInfluences[ 5 ];\n\t\t\ttransformed += morphTarget6 * morphTargetInfluences[ 6 ];\n\t\t\ttransformed += morphTarget7 * morphTargetInfluences[ 7 ];\n\t\t#endif\n\t#endif\n#endif";
 
-var normal_fragment_begin = "float faceDirection = gl_FrontFacing ? 1.0 : - 1.0;\n#ifdef FLAT_SHADED\n\tvec3 fdx = dFdx( vViewPosition );\n\tvec3 fdy = dFdy( vViewPosition );\n\tvec3 normal = normalize( cross( fdx, fdy ) );\n#else\n\tvec3 normal = normalize( vNormal );\n\t#ifdef DOUBLE_SIDED\n\t\tnormal = normal * faceDirection;\n\t#endif\n\t#ifdef USE_TANGENT\n\t\tvec3 tangent = normalize( vTangent );\n\t\tvec3 bitangent = normalize( vBitangent );\n\t\t#ifdef DOUBLE_SIDED\n\t\t\ttangent = tangent * faceDirection;\n\t\t\tbitangent = bitangent * faceDirection;\n\t\t#endif\n\t\t#if defined( TANGENTSPACE_NORMALMAP ) || defined( USE_CLEARCOAT_NORMALMAP )\n\t\t\tmat3 vTBN = mat3( tangent, bitangent, normal );\n\t\t#endif\n\t#endif\n#endif\nvec3 geometryNormal = normal;";
+var normal_fragment_begin = "float faceDirection = gl_FrontFacing ? 1.0 : - 1.0;\n#ifdef FLAT_SHADED\n\tvec3 fdx = vec3( dFdx( vViewPosition.x ), dFdx( vViewPosition.y ), dFdx( vViewPosition.z ) );\n\tvec3 fdy = vec3( dFdy( vViewPosition.x ), dFdy( vViewPosition.y ), dFdy( vViewPosition.z ) );\n\tvec3 normal = normalize( cross( fdx, fdy ) );\n#else\n\tvec3 normal = normalize( vNormal );\n\t#ifdef DOUBLE_SIDED\n\t\tnormal = normal * faceDirection;\n\t#endif\n\t#ifdef USE_TANGENT\n\t\tvec3 tangent = normalize( vTangent );\n\t\tvec3 bitangent = normalize( vBitangent );\n\t\t#ifdef DOUBLE_SIDED\n\t\t\ttangent = tangent * faceDirection;\n\t\t\tbitangent = bitangent * faceDirection;\n\t\t#endif\n\t\t#if defined( TANGENTSPACE_NORMALMAP ) || defined( USE_CLEARCOAT_NORMALMAP )\n\t\t\tmat3 vTBN = mat3( tangent, bitangent, normal );\n\t\t#endif\n\t#endif\n#endif\nvec3 geometryNormal = normal;";
 
 var normal_fragment_maps = "#ifdef OBJECTSPACE_NORMALMAP\n\tnormal = texture2D( normalMap, vUv ).xyz * 2.0 - 1.0;\n\t#ifdef FLIP_SIDED\n\t\tnormal = - normal;\n\t#endif\n\t#ifdef DOUBLE_SIDED\n\t\tnormal = normal * faceDirection;\n\t#endif\n\tnormal = normalize( normalMatrix * normal );\n#elif defined( TANGENTSPACE_NORMALMAP )\n\tvec3 mapN = texture2D( normalMap, vUv ).xyz * 2.0 - 1.0;\n\tmapN.xy *= normalScale;\n\t#ifdef USE_TANGENT\n\t\tnormal = normalize( vTBN * mapN );\n\t#else\n\t\tnormal = perturbNormal2Arb( - vViewPosition, normal, mapN, faceDirection );\n\t#endif\n#elif defined( USE_BUMPMAP )\n\tnormal = perturbNormalArb( - vViewPosition, normal, dHdxy_fwd(), faceDirection );\n#endif";
 
@@ -13455,14 +13455,9 @@ function setValueV4uiArray(gl, v) {
 
 
 function setValueT1Array(gl, v, textures) {
-	const cache = this.cache;
 	const n = v.length;
 	const units = allocTexUnits(textures, n);
-
-	if (!arraysEqual(cache, units)) {
-		gl.uniform1iv(this.addr, units);
-		copyArray(cache, units);
-	}
+	gl.uniform1iv(this.addr, units);
 
 	for (let i = 0; i !== n; ++i) {
 		textures.setTexture2D(v[i] || emptyTexture, units[i]);
@@ -13470,14 +13465,9 @@ function setValueT1Array(gl, v, textures) {
 }
 
 function setValueT3DArray(gl, v, textures) {
-	const cache = this.cache;
 	const n = v.length;
 	const units = allocTexUnits(textures, n);
-
-	if (!arraysEqual(cache, units)) {
-		gl.uniform1iv(this.addr, units);
-		copyArray(cache, units);
-	}
+	gl.uniform1iv(this.addr, units);
 
 	for (let i = 0; i !== n; ++i) {
 		textures.setTexture3D(v[i] || empty3dTexture, units[i]);
@@ -13485,14 +13475,9 @@ function setValueT3DArray(gl, v, textures) {
 }
 
 function setValueT6Array(gl, v, textures) {
-	const cache = this.cache;
 	const n = v.length;
 	const units = allocTexUnits(textures, n);
-
-	if (!arraysEqual(cache, units)) {
-		gl.uniform1iv(this.addr, units);
-		copyArray(cache, units);
-	}
+	gl.uniform1iv(this.addr, units);
 
 	for (let i = 0; i !== n; ++i) {
 		textures.setTextureCube(v[i] || emptyCubeTexture, units[i]);
@@ -13500,14 +13485,9 @@ function setValueT6Array(gl, v, textures) {
 }
 
 function setValueT2DArrayArray(gl, v, textures) {
-	const cache = this.cache;
 	const n = v.length;
 	const units = allocTexUnits(textures, n);
-
-	if (!arraysEqual(cache, units)) {
-		gl.uniform1iv(this.addr, units);
-		copyArray(cache, units);
-	}
+	gl.uniform1iv(this.addr, units);
 
 	for (let i = 0; i !== n; ++i) {
 		textures.setTexture2DArray(v[i] || emptyArrayTexture, units[i]);
@@ -15726,41 +15706,45 @@ function WebGLState(gl, extensions, capabilities) {
 			},
 			setFunc: function (depthFunc) {
 				if (currentDepthFunc !== depthFunc) {
-					switch (depthFunc) {
-						case NeverDepth:
-							gl.depthFunc(gl.NEVER);
-							break;
+					if (depthFunc) {
+						switch (depthFunc) {
+							case NeverDepth:
+								gl.depthFunc(gl.NEVER);
+								break;
 
-						case AlwaysDepth:
-							gl.depthFunc(gl.ALWAYS);
-							break;
+							case AlwaysDepth:
+								gl.depthFunc(gl.ALWAYS);
+								break;
 
-						case LessDepth:
-							gl.depthFunc(gl.LESS);
-							break;
+							case LessDepth:
+								gl.depthFunc(gl.LESS);
+								break;
 
-						case LessEqualDepth:
-							gl.depthFunc(gl.LEQUAL);
-							break;
+							case LessEqualDepth:
+								gl.depthFunc(gl.LEQUAL);
+								break;
 
-						case EqualDepth:
-							gl.depthFunc(gl.EQUAL);
-							break;
+							case EqualDepth:
+								gl.depthFunc(gl.EQUAL);
+								break;
 
-						case GreaterEqualDepth:
-							gl.depthFunc(gl.GEQUAL);
-							break;
+							case GreaterEqualDepth:
+								gl.depthFunc(gl.GEQUAL);
+								break;
 
-						case GreaterDepth:
-							gl.depthFunc(gl.GREATER);
-							break;
+							case GreaterDepth:
+								gl.depthFunc(gl.GREATER);
+								break;
 
-						case NotEqualDepth:
-							gl.depthFunc(gl.NOTEQUAL);
-							break;
+							case NotEqualDepth:
+								gl.depthFunc(gl.NOTEQUAL);
+								break;
 
-						default:
-							gl.depthFunc(gl.LEQUAL);
+							default:
+								gl.depthFunc(gl.LEQUAL);
+						}
+					} else {
+						gl.depthFunc(gl.LEQUAL);
 					}
 
 					currentDepthFunc = depthFunc;
@@ -16244,31 +16228,22 @@ function WebGLState(gl, extensions, capabilities) {
 		}
 	}
 
-	function bindTexture(webglType, webglTexture, webglSlot) {
-		if (webglSlot === undefined) {
-			if (currentTextureSlot === null) {
-				webglSlot = gl.TEXTURE0 + maxTextures - 1;
-			} else {
-				webglSlot = currentTextureSlot;
-			}
+	function bindTexture(webglType, webglTexture) {
+		if (currentTextureSlot === null) {
+			activeTexture();
 		}
 
-		let boundTexture = currentBoundTextures[webglSlot];
+		let boundTexture = currentBoundTextures[currentTextureSlot];
 
 		if (boundTexture === undefined) {
 			boundTexture = {
 				type: undefined,
 				texture: undefined
 			};
-			currentBoundTextures[webglSlot] = boundTexture;
+			currentBoundTextures[currentTextureSlot] = boundTexture;
 		}
 
 		if (boundTexture.type !== webglType || boundTexture.texture !== webglTexture) {
-			if (currentTextureSlot !== webglSlot) {
-				gl.activeTexture(webglSlot);
-				currentTextureSlot = webglSlot;
-			}
-
 			gl.bindTexture(webglType, webglTexture || emptyTextures[webglType]);
 			boundTexture.type = webglType;
 			boundTexture.texture = webglTexture;
@@ -16803,7 +16778,8 @@ function WebGLTextures(_gl, extensions, state, properties, capabilities, utils, 
 			}
 		}
 
-		state.bindTexture(_gl.TEXTURE_2D, textureProperties.__webglTexture, _gl.TEXTURE0 + slot);
+		state.activeTexture(_gl.TEXTURE0 + slot);
+		state.bindTexture(_gl.TEXTURE_2D, textureProperties.__webglTexture);
 	}
 
 	function setTexture2DArray(texture, slot) {
@@ -16814,7 +16790,8 @@ function WebGLTextures(_gl, extensions, state, properties, capabilities, utils, 
 			return;
 		}
 
-		state.bindTexture(_gl.TEXTURE_2D_ARRAY, textureProperties.__webglTexture, _gl.TEXTURE0 + slot);
+		state.activeTexture(_gl.TEXTURE0 + slot);
+		state.bindTexture(_gl.TEXTURE_2D_ARRAY, textureProperties.__webglTexture);
 	}
 
 	function setTexture3D(texture, slot) {
@@ -16825,7 +16802,8 @@ function WebGLTextures(_gl, extensions, state, properties, capabilities, utils, 
 			return;
 		}
 
-		state.bindTexture(_gl.TEXTURE_3D, textureProperties.__webglTexture, _gl.TEXTURE0 + slot);
+		state.activeTexture(_gl.TEXTURE0 + slot);
+		state.bindTexture(_gl.TEXTURE_3D, textureProperties.__webglTexture);
 	}
 
 	function setTextureCube(texture, slot) {
@@ -16836,7 +16814,8 @@ function WebGLTextures(_gl, extensions, state, properties, capabilities, utils, 
 			return;
 		}
 
-		state.bindTexture(_gl.TEXTURE_CUBE_MAP, textureProperties.__webglTexture, _gl.TEXTURE0 + slot);
+		state.activeTexture(_gl.TEXTURE0 + slot);
+		state.bindTexture(_gl.TEXTURE_CUBE_MAP, textureProperties.__webglTexture);
 	}
 
 	const wrappingToGL = {
@@ -16965,12 +16944,10 @@ function WebGLTextures(_gl, extensions, state, properties, capabilities, utils, 
 		if (texture.isData3DTexture) textureType = _gl.TEXTURE_3D;
 		const forceUpload = initTexture(textureProperties, texture);
 		const source = texture.source;
-		state.bindTexture(textureType, textureProperties.__webglTexture, _gl.TEXTURE0 + slot);
-		const sourceProperties = properties.get(source);
+		state.activeTexture(_gl.TEXTURE0 + slot);
+		state.bindTexture(textureType, textureProperties.__webglTexture);
 
-		if (source.version !== sourceProperties.__version || forceUpload === true) {
-			state.activeTexture(_gl.TEXTURE0 + slot);
-
+		if (source.version !== source.__currentVersion || forceUpload === true) {
 			_gl.pixelStorei(_gl.UNPACK_FLIP_Y_WEBGL, texture.flipY);
 
 			_gl.pixelStorei(_gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha);
@@ -16990,7 +16967,7 @@ function WebGLTextures(_gl, extensions, state, properties, capabilities, utils, 
 			let mipmap;
 			const mipmaps = texture.mipmaps;
 			const useTexStorage = isWebGL2 && texture.isVideoTexture !== true;
-			const allocateMemory = sourceProperties.__version === undefined || forceUpload === true;
+			const allocateMemory = source.__currentVersion === undefined || forceUpload === true;
 			const levels = getMipLevels(texture, image, supportsMips);
 
 			if (texture.isDepthTexture) {
@@ -17177,7 +17154,7 @@ function WebGLTextures(_gl, extensions, state, properties, capabilities, utils, 
 				generateMipmap(textureType);
 			}
 
-			sourceProperties.__version = source.version;
+			source.__currentVersion = source.version;
 			if (texture.onUpdate) texture.onUpdate(texture);
 		}
 
@@ -17188,12 +17165,10 @@ function WebGLTextures(_gl, extensions, state, properties, capabilities, utils, 
 		if (texture.image.length !== 6) return;
 		const forceUpload = initTexture(textureProperties, texture);
 		const source = texture.source;
-		state.bindTexture(_gl.TEXTURE_CUBE_MAP, textureProperties.__webglTexture, _gl.TEXTURE0 + slot);
-		const sourceProperties = properties.get(source);
+		state.activeTexture(_gl.TEXTURE0 + slot);
+		state.bindTexture(_gl.TEXTURE_CUBE_MAP, textureProperties.__webglTexture);
 
-		if (source.version !== sourceProperties.__version || forceUpload === true) {
-			state.activeTexture(_gl.TEXTURE0 + slot);
-
+		if (source.version !== source.__currentVersion || forceUpload === true) {
 			_gl.pixelStorei(_gl.UNPACK_FLIP_Y_WEBGL, texture.flipY);
 
 			_gl.pixelStorei(_gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, texture.premultiplyAlpha);
@@ -17222,7 +17197,7 @@ function WebGLTextures(_gl, extensions, state, properties, capabilities, utils, 
 						glType = utils.convert(texture.type),
 						glInternalFormat = getInternalFormat(texture.internalFormat, glFormat, glType, texture.encoding);
 			const useTexStorage = isWebGL2 && texture.isVideoTexture !== true;
-			const allocateMemory = sourceProperties.__version === undefined || forceUpload === true;
+			const allocateMemory = source.__currentVersion === undefined || forceUpload === true;
 			let levels = getMipLevels(texture, image, supportsMips);
 			setTextureParameters(_gl.TEXTURE_CUBE_MAP, texture, supportsMips);
 			let mipmaps;
@@ -17311,7 +17286,7 @@ function WebGLTextures(_gl, extensions, state, properties, capabilities, utils, 
 				generateMipmap(_gl.TEXTURE_CUBE_MAP);
 			}
 
-			sourceProperties.__version = source.version;
+			source.__currentVersion = source.version;
 			if (texture.onUpdate) texture.onUpdate(texture);
 		}
 
@@ -29179,7 +29154,8 @@ class LightShadow {
 		this._frustum.setFromProjectionMatrix(_projScreenMatrix$1);
 
 		shadowMatrix.set(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0);
-		shadowMatrix.multiply(_projScreenMatrix$1);
+		shadowMatrix.multiply(shadowCamera.projectionMatrix);
+		shadowMatrix.multiply(shadowCamera.matrixWorldInverse);
 	}
 
 	getViewport(viewportIndex) {
@@ -32158,11 +32134,6 @@ class PropertyBinding {
 					break;
 
 				case 'map':
-					if ('map' in targetObject) {
-						targetObject = targetObject.map;
-						break;
-					}
-
 					if (!targetObject.material) {
 						console.error('THREE.PropertyBinding: Can not bind to material as node does not have a material.', this);
 						return;
@@ -34272,11 +34243,6 @@ class SkeletonHelper extends LineSegments {
 		super.updateMatrixWorld(force);
 	}
 
-	dispose() {
-		this.geometry.dispose();
-		this.material.dispose();
-	}
-
 }
 
 function getBoneList(object) {
@@ -34444,11 +34410,6 @@ class GridHelper extends LineSegments {
 		this.type = 'GridHelper';
 	}
 
-	dispose() {
-		this.geometry.dispose();
-		this.material.dispose();
-	}
-
 }
 
 class PolarGridHelper extends LineSegments {
@@ -34501,11 +34462,6 @@ class PolarGridHelper extends LineSegments {
 		});
 		super(geometry, material);
 		this.type = 'PolarGridHelper';
-	}
-
-	dispose() {
-		this.geometry.dispose();
-		this.material.dispose();
 	}
 
 }
@@ -34895,11 +34851,6 @@ class BoxHelper extends LineSegments {
 		return this;
 	}
 
-	dispose() {
-		this.geometry.dispose();
-		this.material.dispose();
-	}
-
 }
 
 class Box3Helper extends LineSegments {
@@ -34925,11 +34876,6 @@ class Box3Helper extends LineSegments {
 		box.getSize(this.scale);
 		this.scale.multiplyScalar(0.5);
 		super.updateMatrixWorld(force);
-	}
-
-	dispose() {
-		this.geometry.dispose();
-		this.material.dispose();
 	}
 
 }
@@ -34967,13 +34913,6 @@ class PlaneHelper extends Line {
 		this.lookAt(this.plane.normal);
 		this.translateZ(-this.plane.constant);
 		super.updateMatrixWorld(force);
-	}
-
-	dispose() {
-		this.geometry.dispose();
-		this.material.dispose();
-		this.children[0].geometry.dispose();
-		this.children[0].material.dispose();
 	}
 
 }
@@ -35048,13 +34987,6 @@ class ArrowHelper extends Object3D {
 		this.line.copy(source.line);
 		this.cone.copy(source.cone);
 		return this;
-	}
-
-	dispose() {
-		this.line.geometry.dispose();
-		this.line.material.dispose();
-		this.cone.geometry.dispose();
-		this.cone.material.dispose();
 	}
 
 }
